@@ -1,0 +1,82 @@
+#include <iostream>
+#include <vector>
+#include <fstream>
+#define INFINIT 9999999
+
+using std::vector;
+using std::ifstream;
+using std::pair;
+
+vector<pair<int,int>> ListaAdiacenta[100];
+int NrNoduri, NrMuchii;
+int Parinte[1001], Key[1001];
+
+int extact_min(vector<int>& Q) {
+    int nod = Q[0];
+    int minim = Key[nod];
+    for ( int i = 0 ; i < Q.size() ; i++ ){
+        int v = Q[i];
+        if ( Key[v] < minim ){
+            nod = v;
+            minim = Key[v];
+        }
+    }
+    auto it = Q.begin();
+    while(it != Q.end() && *it != nod){
+        it++;
+    }
+    Q.erase(it);
+    return nod;
+}
+
+bool apartine(int vecin, vector<int> Q){
+    for ( int i = 0 ; i < Q.size() ; i ++ )
+        if ( vecin == Q[i] )
+            return true;
+    return false;
+}
+
+void Prim(int r){
+    for ( int i = 0 ; i < NrNoduri ;  i ++ ){
+        Key[i] = INFINIT;
+        Parinte[i] = -1;
+    }
+    Key[r] = 0;
+    vector<int> Q;
+    for ( int i = 0 ; i < NrNoduri ; i ++ )
+        Q.push_back(i);
+    while(!Q.empty()){
+        int u = extact_min(Q);
+        for ( auto pereche : ListaAdiacenta[u] ){
+            int vecin = pereche.first;
+            int w = pereche.second;
+            if ( apartine(vecin, Q) && w < Key[vecin] ){
+                Parinte[vecin] = u;
+                Key[vecin] = w;
+            }
+        }
+    }
+}
+
+int main() {
+    ifstream fin("in.txt");
+    fin >> NrNoduri >> NrMuchii;
+    for ( int i = 0 ; i < NrMuchii ; i ++ ){
+        int x,y, w;
+        fin >> x >> y >> w;
+        ListaAdiacenta[x].push_back({y,w});
+        ListaAdiacenta[y].push_back({x,w});
+    }
+    fin.close();
+    Prim(0);
+    for ( int i = 0 ; i < NrNoduri ; i ++ ){
+        std::cout << Parinte[i] << ' ';
+    }
+
+    int sum = 0;
+    for ( int i = 0 ; i < NrNoduri ; i ++ ){
+        sum+= Key[i];
+    }
+    std::cout << '\n' << sum;
+    return 0;
+}

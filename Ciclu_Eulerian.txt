@@ -1,0 +1,40 @@
+#include <iostream>
+#include <fstream>
+#include <queue>
+using std::queue;
+void DescopierireCicluEuler(int Graf[101][101], int nrNoduri, int i, queue<int>& Q){
+    for ( int j = 0 ; j < nrNoduri ; j ++ ){
+        if ( Graf[i][j] == 1 ){
+            Graf[i][j] = Graf[j][i] = 0;
+            DescopierireCicluEuler(Graf, nrNoduri, j,Q);
+            Q.push(j);
+        }
+    }
+}
+
+queue<int> CicluEulerian(int Graf[101][101], int nrNoduri){
+    queue<int>Q;
+    DescopierireCicluEuler(Graf, nrNoduri, 0,Q);
+    return Q;
+}
+
+int main() {
+    int Graf[101][101], nrNoduri, nrMuchii;
+    std::ifstream fin("in.txt");
+    fin >> nrNoduri >> nrMuchii;
+    for(int i = 0 ; i < nrNoduri ; i ++ )
+        for ( int j = 0 ; j < nrNoduri ; j ++ )
+            Graf[i][j] = 0;
+    for ( int i = 0 ; i < nrMuchii ; i ++ ){
+        int nod1, nod2;
+        fin >> nod1 >> nod2;
+        Graf[nod1][nod2] = 1;
+        Graf[nod2][nod1] = 1;
+    }
+    auto Q = CicluEulerian(Graf, nrNoduri);
+    while(!Q.empty()){
+        std::cout <<Q.front() << ' ';
+        Q.pop();
+    }
+    return 0;
+}

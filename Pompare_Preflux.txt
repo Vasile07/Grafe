@@ -1,0 +1,124 @@
+#include <iostream>
+#include <fstream>
+
+int graf[1001][1001], graf_rezidual[1001][1001], exces[1001], inaltime[1001];
+int nrNoduri, nrMuchii;
+
+void afisare(){
+    std::cout << "Graf Rezidual:\n";
+    for ( int i = 0 ; i < nrNoduri ; i ++ ) {
+        for (int j = 0; j < nrNoduri; j++)
+            std::cout << graf_rezidual[i][j] << ' ';
+        std::cout << '\n';
+    }
+    std::cout << "Exces:\n";
+    for ( int i = 0 ; i < nrNoduri ; i ++ )
+        std::cout << exces[i] << ' ';
+    std::cout << '\n';
+}
+
+void IntializarePreflux(int s, int t){
+    for ( int vertex = 0 ; vertex < nrNoduri ; vertex ++  ){
+        exces[vertex] = 0;
+        inaltime[vertex] = 0;
+    }
+
+    for ( int i = 0 ; i < nrNoduri ; i ++ )
+        for ( int j = 0 ; j < nrNoduri ; j ++ )
+            graf_rezidual[i][j] = graf[i][j];
+    inaltime[s] = nrNoduri;
+
+    for ( int i = 0 ; i < nrNoduri ; i ++ ){
+        if ( graf[s][i] ) {
+            //graf_rezidual[s][i] = graf[s][i];
+            exces[i] = graf[s][i];
+            exces[s] = exces[s] - graf[s][i];
+        }
+    }
+}
+
+void Inaltare(int u){
+    int h_min = nrNoduri;
+    for ( int v = 0 ; v < nrNoduri ; v ++ ){
+        if ( graf_rezidual[u][v] ){
+            h_min = std::min(h_min, inaltime[v]);
+        }
+    }
+    inaltime[u] = h_min + 1;
+}
+
+void Pompare(int u, int v){
+    //std::cout <<"POMPARE: "<< u << ' '<< v << '\n' ;
+    int diferenta = std::min(exces[u], graf_rezidual[u][v]);
+    graf_rezidual[u][v] = graf_rezidual[u][v] - diferenta;
+    graf_rezidual[v][u] = graf_rezidual[v][u] + diferenta;
+    exces[u] -= diferenta;
+    exces[v] += diferenta;
+//    graf_rezidual[u][v] -= diferenta;
+//    graf_rezidual[v][u] += diferenta;
+}
+
+bool cond(int u){
+    bool gasit = false;
+    for ( int v = 0 ; v < nrNoduri ; v ++ ){
+        if ( graf_rezidual[u][v] ) {
+            if (inaltime[u] > inaltime[v]) {
+                return false;
+            }
+            gasit = true;
+        }
+    }
+    return gasit;
+}
+
+void Pompare_Preflux() {
+    int s = 0, t = nrNoduri -1;
+    IntializarePreflux(s,t);
+    while(true){
+        //afisare();
+        bool gasit = false;
+        for ( int u = 0 ; u < nrNoduri && !gasit ; u ++ ) {
+            for (int v = 0; v < nrNoduri && !gasit; v++) {
+                if (u != s && u != t && exces[u] > 0 && graf_rezidual[u][v] && inaltime[u] > inaltime[v] ) {
+                    Pompare(u, v);
+                    gasit = true;
+                }
+            }
+        }
+        if ( gasit )
+            continue;
+
+        for ( int u = 0 ; u < nrNoduri && !gasit ; u ++ ) {
+            if (u != s && u != t && exces[u] > 0 && cond(u)){
+                Inaltare(u);
+                gasit = true;
+            }
+        }
+        if ( gasit )
+            continue;
+        break;
+    }
+}
+
+int main() {
+
+    std::ifstream fin("3-in.txt");
+    fin >> nrNoduri >> nrMuchii;
+    for ( int i = 0 ; i < nrMuchii ; i ++ ){
+        int n1, n2, cap;
+        fin >> n1 >> n2 >> cap;
+        graf[n1][n2] = cap;
+    }
+    fin.close();
+
+    std::ofstream fout("out.txt");
+    Pompare_Preflux();
+    for ( int i = 0 ; i < nrNoduri ; i ++ )
+        if ( i != 0 && i != nrNoduri-1 ) {
+            exces[0] += exces[i];
+            exces[i] = 0;
+        }
+    fout << exces[nrNoduri-1];
+    fout.close();
+    return 0;
+}

@@ -1,0 +1,111 @@
+#include <iostream>
+#include <vector>
+#include <map>
+#include <string>
+#include <fstream>
+#include <cstring>
+#include <queue>
+
+using std::string;
+using std::map;
+using std::vector;
+using std::ifstream;
+using std::ofstream;
+using std::pair;
+using std::priority_queue;
+
+class Nod{
+private:
+    Nod* stang;
+    Nod* drept;
+    int frecv;
+    char letter;
+public:
+    Nod(char letter, int frecv, Nod* stang, Nod* drept):letter{letter},frecv{frecv},stang{stang},drept{drept}{}
+    int get_frecv() const {return frecv;}
+
+    Nod* get_stang(){return stang;}
+    Nod* get_drept(){return drept;}
+    char get_letter() const{return letter;}
+
+    bool operator<(const Nod*& nod2) const{
+        return frecv < nod2->frecv || frecv == nod2->frecv && letter < nod2->letter ;
+    }
+
+};
+
+class Comparator{
+public:
+    bool operator()(Nod* n1, Nod* n2){
+        return n1->get_frecv() > n2->get_frecv() || n1->get_frecv() == n2->get_frecv() && n1->get_letter() > n2->get_letter();
+    }
+};
+
+
+void decode(Nod *radacina, char cod[], string& decod) {
+    int i = 0;
+    while( i < strlen(cod)){
+        Nod* prim = radacina;
+        while( prim->get_stang() != nullptr && prim->get_drept() != nullptr){
+            if ( cod[i] == '0')
+                prim = prim->get_stang();
+            else
+                prim = prim->get_drept();
+            i++;
+        }
+        decod+=prim->get_letter();
+    }
+}
+
+void DecodareHuffman(vector<pair<char,int>> C, char cod[], string& decod){
+    int n = C.size();
+    priority_queue<Nod*, vector<Nod*>, Comparator>Q;
+    for ( auto elem : C) {
+        Nod* z = new Nod{elem.first, elem.second, nullptr, nullptr};
+        Q.push(z);
+    }
+
+    while(Q.size()!=1){
+        auto x = Q.top(); Q.pop();
+        auto y = Q.top(); Q.pop();
+        Nod* z = new Nod{std::min(x->get_letter(),y->get_letter()), x->get_frecv() + y->get_frecv() , x, y};
+        Q.push(z);
+    }
+
+
+    Nod* radacina = Q.top();
+    decode(radacina, cod, decod);
+}
+
+int main(int argc, char* argv[]) {
+
+    if ( argc != 3 ){
+        std::cout<<"Numar parametri invalid!\n";
+        return -1;
+    }
+
+    char letter;
+    int frecv;
+    vector<pair<char,int>>C;
+    int n;
+    ifstream  fin(argv[1]);
+    fin >> n;
+    for ( int i = 0 ; i < n ; i ++ ){
+        fin.get(letter);
+        fin.get(letter);
+        fin >> frecv;
+        C.push_back({letter,frecv});
+    }
+    char cod[100001];
+    fin.get();
+    fin.getline(cod, 100001);
+    fin.close();
+
+    string decod;
+    DecodareHuffman(C, cod, decod);
+    ofstream fout(argv[2]);
+    fout << decod;
+    fout.close();
+
+    return 0;
+}

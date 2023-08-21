@@ -1,0 +1,67 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+using std::vector;
+using std::ifstream;
+using std::ofstream;
+
+typedef int TNod;
+
+TNod minimum_leaf(vector<TNod> tati, int n) {
+    for ( int leaf = 0 ; leaf < n ; leaf ++ ){
+        if ( tati[leaf] != -1 ){
+            bool gasit = false;
+            for ( auto nod : tati){
+                if ( nod == leaf){
+                    gasit = true;
+                    break;
+                }
+            }
+            if ( !gasit )
+                return leaf;
+        }
+    }
+    return -1;
+}
+
+vector<TNod> CodarePrufer(vector<TNod> tati, int n) {
+    vector<TNod> K;
+    TNod frunza;
+    while ( (frunza = minimum_leaf(tati, n)) != -1){
+        K.push_back(tati[frunza]);
+        tati[frunza] = -1;
+    }
+    return K;
+}
+
+int main(int argc, char* argv[]) {
+
+    if ( argc != 3 ) {
+        std::cout << "Numar parametri invalid!\n";
+        return 0;
+    }
+
+    int n;
+    vector<TNod>tati;
+
+    ifstream fin(argv[1]);
+    fin >> n;
+    for(int i = 0 ; i < n ; i ++ ){
+        TNod nod;
+        fin >> nod;
+        tati.push_back(nod);
+    }
+    fin.close();
+
+    vector<TNod> K = CodarePrufer(tati, n);
+
+    ofstream fout(argv[2]);
+    fout << K.size() << '\n';
+    for ( auto elem : K )
+        fout << elem << ' ';
+    fout << '\n';
+    fout.close();
+
+    return 0;
+}

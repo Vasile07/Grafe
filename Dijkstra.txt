@@ -1,0 +1,145 @@
+#include <iostream>
+#include <fstream>
+#include <queue>
+#include <bits/stdc++.h>
+#define INFINIT 9999
+using std::ifstream;
+using std::sort;
+typedef struct{
+    int u, v, w;
+}arc;
+
+typedef struct{
+    int d, pi;
+}drum;
+
+struct pereche{
+    int vf;
+    int distanta;
+    bool operator<(const pereche& p) const{
+        return distanta < p.distanta;
+    }
+};
+
+void Relax(int u, int v, int w, drum h[]);
+
+void Initializare(drum h[], int V, int sursa);
+
+bool Bellman_Ford(arc noduri[], int sursa,int V , int E, drum h[]);
+
+void Dijkstra(arc noduri[], int V, int E, int sursa, drum dist[]);
+
+int main(int argc, char* argv[]){
+    int V, E;
+    arc noduri[101];
+
+    ifstream fin(argv[1]);
+    fin >> V >> E;
+    for ( int i = 0; i < E ; i ++ )
+        fin >> noduri[i].u >> noduri[i].v >> noduri[i].w;
+    fin.close();
+
+
+    int s = V;
+    int E_old = E;
+    for (int i = 0 ; i < V; i ++ ) {
+        noduri[E].u = s;
+        noduri[E].v = i;
+        noduri[E].w = 0;
+        E++;
+    }
+    drum h[101];
+    bool exitcode = Bellman_Ford(noduri, s, V, E, h);
+    if (!exitcode) return -10;
+
+    int mat[101][101];
+
+    for ( int i = 0 ; i < E ; i++ )
+        noduri[i].w = noduri[i].w + h[noduri[i].u].d - h[noduri[i].v].d;
+
+    std::ofstream fout(argv[2]);
+    fout <<"DRUMURILE REPONDERATE:\n";
+    for ( int i = 0 ; i < E_old; i ++ )
+        fout << noduri[i].u << ' ' << noduri[i].v << ' ' << noduri[i].w << std::endl;
+    fout << std::endl;
+
+    for (int i = 0 ; i < V; i ++ ){
+        drum dist[101];
+        Dijkstra(noduri, V, E_old, i, dist);
+        for ( int j = 0 ; j <= V; j++)
+            mat[i][j] = dist[j].d - noduri[j].w + noduri[i].w;
+    }
+
+
+
+    for(int i = 0 ; i < V ; i ++ ) {
+        for (int j = 0; j < V; j++)
+            if(mat[i][j] >= INFINIT)
+                fout << "INF" << ' ';
+            else
+                fout << mat[i][j] << ' ';
+        fout << std::endl;
+    }
+
+    return 0;
+}
+
+bool Bellman_Ford(arc noduri[], int sursa,int V , int E, drum h[]) {
+    Initializare(h, V, sursa);
+    for ( int i = 1 ; i < V ; i ++ )
+        for ( int j = 0 ; j < E ; j ++ )
+            Relax(noduri[j].u, noduri[j].v, noduri[j].w, h);
+
+    for ( int j = 0 ; j < E ; j ++ )
+        if ( h[noduri[j].v].d > h[noduri[j].u].d + noduri[j].w)
+            return false;
+
+    return true;
+}
+
+void Initializare(drum h[], int V, int sursa){
+    for (int i = 0 ; i <= V; i++ ){
+        h[i].d = INFINIT;
+        h[i].pi = -1;
+    }
+    h[sursa].d = 0;
+}
+
+void Relax(int u, int v, int w, drum h[]){
+    if(h[v].d > h[u].d + w){
+        h[v].d = h[u].d + w;
+        h[v].pi = u;
+    }
+}
+
+void Dijkstra(arc noduri[], int V, int E, int sursa, drum dist[]){
+    Initializare(dist, V, sursa);
+    std::vector <pereche> Q;
+    for ( int i = 0 ; i <= V ; i ++ ) {
+        pereche p{};
+        p.vf = i; p.distanta = dist[i].d;
+        Q.push_back(p);
+    }
+    std::sort(Q.begin(), Q.end());
+
+    while (!Q.empty()){
+        std::sort(Q.begin(), Q.end());
+        pereche u = Q[0];
+        for(int i = 0 ; i <Q.size()-1;i++)
+            Q[i] = Q[i+1];
+        Q.pop_back();
+
+
+        for ( int i = 0 ; i < E ; i ++ ) {
+            if (noduri[i].u == u.vf)
+                Relax(u.vf, noduri[i].v, noduri[i].w, dist);
+        }
+
+        for ( int j = 0 ; j < Q.size() ; j ++ ) {
+            for (int i = 0 ; i <= V ; i++ )
+            if (Q[j].vf == i)
+                Q[j].distanta = dist[i].d;
+        }
+    }
+
+}

@@ -1,0 +1,96 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <fstream>
+
+using std::vector;
+using std::pair;
+using std::sort;
+using std::ifstream;
+using std::ofstream;
+
+typedef int TPondere;
+typedef int TNod;
+typedef pair<TNod, TNod> TMuchie;
+
+class DisjointSet{
+private:
+    int tati[50000];
+    int rang[50000];
+
+public:
+    DisjointSet(int nrNoduri){
+        for ( int i = 0 ; i < nrNoduri ; i ++ ){
+            tati[i] = i;
+            rang[i] = 0;
+        }
+    }
+
+    int FindSet(int nod){
+        if ( nod != tati[nod])
+            tati[nod] = FindSet(tati[nod]);
+        return tati[nod];
+    }
+
+    void UnionSet(int nod1, int nod2){
+        nod1 = FindSet(nod1);
+        nod2 = FindSet(nod2);
+        if( rang[nod1] > rang[nod2])
+            tati[nod2] = nod1;
+        else
+            tati[nod1] = nod2;
+        if ( rang[nod1] == rang[nod2])
+            rang[nod2] ++;
+    }
+};
+
+TPondere Kruskal(vector<pair<TPondere,TMuchie>>E, int n, vector<TMuchie>& ArboreMinimDeAcoperire){
+    TPondere sum = 0;
+    DisjointSet set{n};
+    sort(E.begin(), E.end());
+    for ( auto elem : E){
+        TNod u = elem.second.first;
+        TNod v = elem.second.second;
+        auto set_u = set.FindSet(u);
+        auto set_v = set.FindSet(v);
+        if ( set_u != set_v){
+            sum += elem.first;
+            ArboreMinimDeAcoperire.push_back(elem.second);
+            set.UnionSet(set_u,set_v);
+        }
+    }
+    return sum;
+}
+
+int main(int argc, char* argv[]) {
+
+    if ( argc != 2 ){
+        std::cout << "Numar parametri invalid!\n";
+        return -1;
+    }
+
+    vector<pair<TPondere,TMuchie>>E;
+
+    ifstream fin(argv[1]);
+    int n, m;
+    fin >> n >> m;
+    for ( int i = 0 ; i < m ; i ++ ){
+        TNod nod1, nod2;
+        TPondere w;
+        fin >> nod1 >> nod2 >> w;
+        E.push_back({w,{nod1, nod2}});
+    }
+    fin.close();
+
+    vector<TMuchie>ArboreMinimDeAcoperire;
+    TPondere cost_total = Kruskal(E, n, ArboreMinimDeAcoperire);
+
+    ofstream fout(argv[2]);
+    fout << cost_total << '\n';
+    fout << ArboreMinimDeAcoperire.size() << '\n';
+    for ( TMuchie muchie : ArboreMinimDeAcoperire)
+        fout << muchie.first << ' ' << muchie.second << '\n';
+    fout.close();
+
+    return 0;
+}

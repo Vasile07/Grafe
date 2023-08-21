@@ -1,0 +1,83 @@
+#include <iostream>
+#include <fstream>
+#include <queue>
+using std::queue;
+
+bool Gaseste_Drum(int Graf[101][101], int s, int t, int drum[101], int nrNoduri){
+    bool viz[101];
+    for ( int i = 0 ; i < nrNoduri; i ++ ) {
+        drum[i] = -1;
+        viz[i] = false;
+    }
+    queue<int>Q;
+    Q.push(s);
+    viz[s] = true;
+    while(!Q.empty()){
+        int nod  = Q.front(); Q.pop();
+        for( int vecin = 0 ; vecin < nrNoduri ; vecin ++ )
+            if ( !viz[vecin] && Graf[nod][vecin] > 0){
+                Q.push(vecin);
+                drum[vecin] = nod;
+                viz[vecin] = true;
+            }
+    }
+    return viz[t];
+
+}
+
+int Edmond_Karp(int Graf[101][101], int nrNoduri) {
+    int flux_maxim = 0;
+    int GrafRezidual[101][101];
+    for ( int i = 0 ; i < nrNoduri ; i ++ ){
+        for ( int j = 0 ; j < nrNoduri ; j ++ ) {
+            GrafRezidual[i][j] = Graf[i][j];
+        }
+    }
+
+    int drum[101]; // Vectorul de parinti care determina drumul
+    int s = 0 , t = nrNoduri-1;
+    while(Gaseste_Drum(GrafRezidual,s,t,drum, nrNoduri)){
+        for ( int i = 0 ; i < nrNoduri ; i ++ )
+            std::cout << drum[i] << ' ';
+        std::cout << '\n';
+        int vertex = t;
+        int flux = INT_MAX;
+        while(vertex!=s){
+            flux = std::min(flux, GrafRezidual[drum[vertex]][vertex]);
+            vertex = drum[vertex];
+        }
+        std::cout<<flux<<"\n";
+        vertex = t;
+        while(vertex!=s){
+            GrafRezidual[vertex][drum[vertex]] += flux;
+            GrafRezidual[drum[vertex]][vertex] -= flux;
+            vertex = drum[vertex];
+        }
+        flux_maxim += flux;
+    }
+    return flux_maxim;
+}
+
+int main() {
+    int Graf[101][101], nrNoduri, nrMuchii;
+    for ( int i = 0 ; i < 101 ; i ++ )
+        for ( int j = 0 ; j < 101 ; j ++ )
+            Graf[i][j] = 0;
+    std::ifstream fin("in.txt");
+    int nod1, nod2, cap;
+    fin >> nrNoduri >> nrMuchii;
+    for ( int i = 0 ; i < nrMuchii ; i ++ ){
+        fin >> nod1 >> nod2 >> cap;
+        Graf[nod1][nod2] = cap;
+    }
+    fin.close();
+
+
+    int flux_maxim = Edmond_Karp(Graf, nrNoduri);
+
+    std::ofstream fout("out.txt");
+    fout << flux_maxim;
+    fout.close();
+
+    return 0;
+}

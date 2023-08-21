@@ -1,0 +1,79 @@
+//
+// Created by Irimieş Vasile on 3/20/2023.
+//
+
+#include "BFS.h"
+#include "vector"
+#include "queue"
+#include "fstream"
+#include "iostream"
+#include <cstring>
+
+using namespace std;
+
+void problema_4(){
+    int n, nod_sursa;
+    vector <int> Lista_Adiacenta[101];
+    Caracteristici_Noduri Lista_Noduri[101];
+
+    /// CITIREA MUCHIILOR + FORMARE LISTA DE ADIACENTA
+    ifstream fin("graf.txt");
+    fin >> n;
+    int nod1, nod2;
+    while ( fin >> nod1 >> nod2 )
+        Lista_Adiacenta[nod1].push_back(nod2);
+    fin.close();
+
+    cout<<"Dati nodul sursa:"; cin >> nod_sursa;
+
+    ///Initializari
+    for ( int nod = 1 ; nod <= n ; nod++ )
+        if ( nod != nod_sursa ){
+            strcpy(Lista_Noduri[nod].color,"alb");
+            Lista_Noduri[nod].distance = INFINIT;
+            Lista_Noduri[nod].parinte = NIL;
+        }
+    Lista_Noduri[nod_sursa].parinte = NIL;
+    strcpy(Lista_Noduri[nod_sursa].color, "gri");
+    Lista_Noduri[nod_sursa].distance = 0;
+
+    /// Cautarea in latime
+    queue <int> Q;
+    Q.push(nod_sursa);
+
+    while ( !Q.empty() ){
+        int nod = Q.front(); Q.pop();
+        for ( int i = 0 ; i < Lista_Adiacenta[nod].size() ; i++ ){
+            int vecin  = Lista_Adiacenta[nod][i];
+            if (strcmp( Lista_Noduri[vecin].color,"alb") == 0){
+                strcpy(Lista_Noduri[vecin].color, "gri");
+                Lista_Noduri[vecin].distance = Lista_Noduri[nod].distance + 1;
+                Lista_Noduri[vecin].parinte = nod;
+                Q.push(vecin);
+            }
+        }
+        strcpy(Lista_Noduri[nod].color,"negru");
+    }
+
+
+    cout << "Noduri   |";
+    for ( int i = 1 ; i <= n ; i++ )
+        printf("%4d", i);
+    cout << '\n';
+
+    cout<<"Distanta |";
+    for ( int i = 1 ; i <= n ; i++ )
+        if (Lista_Noduri[i].distance == INFINIT)
+            printf("%4s", "INF");
+        else
+            printf("%4d", Lista_Noduri[i].distance);
+    cout << '\n';
+
+    cout<<"Parinte  |";
+    for ( int i = 1 ; i <= n ; i++ )
+        if ( Lista_Noduri[i].parinte == NIL )
+            printf("%4s","NIL");
+        else
+            printf("%4d", Lista_Noduri[i].parinte);
+    cout << '\n';
+}

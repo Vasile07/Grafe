@@ -1,0 +1,96 @@
+#include <iostream>
+#include <cstring>
+#include <fstream>
+#include <cassert>
+
+#define INF 999999
+#define NIL (-1)
+
+using std::cout;
+
+struct arc{
+    unsigned int u, v;
+    int w;
+};
+
+struct bf{
+    int d;
+    unsigned int pi;
+};
+
+void INITIALIZARE(bf *V,unsigned int sursa,unsigned int numar_noduri){
+    for ( unsigned int i  = 0 ; i < numar_noduri ; i ++ ) {
+        V[i].d = INF;
+        V[i].pi = NIL;
+    }
+    V[sursa].d = 0;
+}
+
+
+void RELAX(bf* V, unsigned int u, unsigned int v, int len){
+    if( V[v].d > V[u].d + len){
+        V[v].d = V[u].d + len;
+        V[v].pi = u;
+    }
+}
+
+/**
+ * Construieste drumurile de lungime minima pornind de la un nod sursa
+ * @param sir - lista de arce
+ * @param sursa - nod sursa
+ * @param E - numarul de arce
+ * @param V - numarul de noduri
+ * @param vect - vector de drumuri si lungimi
+ * @return  true - nu exista cicluri negative
+ *          false - altfel
+ */
+bool Bellman_Ford(arc* sir, unsigned int sursa, unsigned int E, unsigned int V, bf* vect){
+    INITIALIZARE(vect, sursa, V);
+    for ( unsigned int i = 1 ; i < V ; i ++ )
+        for (unsigned int a = 0 ; a < E ; a ++ )
+            RELAX(vect, sir[a].u, sir[a].v, sir[a].w);
+    for (unsigned int a = 0 ; a < E ; a ++ ){
+        unsigned int v = sir[a].v, u = sir[a].u;
+        if ( vect[v].d > vect[u].d + sir[a].w )
+            return false;
+    }
+    return true;
+}
+
+int main(int argc, char* argv[]) {
+
+    char Teste[8][20], Verificare[8][20];
+    strcpy(Teste[1], "1-in.txt");strcpy(Teste[2], "2-in.txt");strcpy(Teste[3], "3-in.txt");strcpy(Teste[4], "4-in.txt");strcpy(Teste[5], "5-in.txt");strcpy(Teste[6], "6-in.txt");strcpy(Teste[7], "7-in.txt");
+    strcpy(Verificare[1], "1-out.txt");strcpy(Verificare[2], "2-out.txt");strcpy(Verificare[3], "3-out.txt");strcpy(Verificare[4], "4-out.txt");strcpy(Verificare[5], "5-out.txt");strcpy(Verificare[6], "6-out.txt");strcpy(Verificare[7], "7-out.txt");
+    //for ( int test = 1 ; test <= 7 ; test ++ ){
+        unsigned int V, E, sursa, x, y;
+        int w;
+
+        ///CITIRE
+        std::ifstream fin(argv[1]);
+        fin >> V >> E >> sursa;
+        arc* v = new arc[E];
+        for ( int i =  0; i < E; i ++ ){
+            fin >> x >> y >> w;
+            v[i].u = x;
+            v[i].v = y;
+            v[i].w = w;
+        }
+        fin.close();
+
+        ///BELLMAN-FORD
+        bf* vect = new bf[V+1];
+        Bellman_Ford(v, sursa, E, V, vect);
+
+        std::ofstream fout(argv[2]);
+        //cout << "FISIERUL DE TEST: " << Teste[test] << '\n';
+        for ( int i = 0 ; i < V ; i ++ )
+            if ( vect[i].d == INF) fout << "INF" << ' ';
+            else fout << vect[i].d << ' ';
+        fout << '\n';
+
+        //cout << test << '\n';
+        delete[] v;
+        delete[] vect;
+    return 0;
+}

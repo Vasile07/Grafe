@@ -1,0 +1,85 @@
+//
+// Created by Irimieş Vasile on 3/20/2023.
+//
+#include <fstream>
+#include <iostream>
+#include "Moore.h"
+#include "vector"
+#include "queue"
+#include "climits"
+#include "stack"
+#define INFINIT INT_MAX
+using namespace std;
+
+void problema_1() {
+    int n, nod1, nod2;
+    int lungime_lant[101], parinte[101];
+    vector<int> Lista_Adiacenta[101];
+    ifstream fin("graf.txt");
+
+    fin >> n;
+    while (fin >> nod1 >> nod2)
+        Lista_Adiacenta[nod1].push_back(nod2);
+    fin.close();
+
+    int nod_sursa, nod_destinatie;
+    cout << "Dati nodul sursa:";
+    cin >> nod_sursa;
+    cout << "Dati nodul destinatie:";
+    cin >> nod_destinatie;
+
+    ///Initializarile
+    /**
+     * Lungimea lantului din nodul sursa in nodul sursa e 0
+     * Parintele nodului sursa e 0
+     * Lungimea lantului pana in momemntul de fata din nodul sursa in celelalte noduri este INF, iar parintii sunt -1/NIL
+     */
+    lungime_lant[nod_sursa] = 0;
+    parinte[nod_sursa] = 0;
+    for (int nod = 1; nod <= n; nod++)
+        if ( nod != nod_sursa ) {
+            lungime_lant[nod] = INFINIT;
+            parinte[nod] = -1;
+        }
+
+    ///Algoritmul lui Moore
+    queue <int> Q;
+    Q.push(nod_sursa);
+
+    while (!Q.empty()){
+        int nod = Q.front();
+        Q.pop();
+
+        for ( int i = 0 ; i < Lista_Adiacenta[nod].size() ; i ++ ){
+            int vecin = Lista_Adiacenta[nod][i];
+            if (lungime_lant[vecin] == INFINIT){ // Daca nodul nu a mai fost accesat in trecut
+                parinte[vecin] = nod;
+                lungime_lant[vecin] = lungime_lant[nod] + 1;
+                Q.push(vecin);
+            }
+        }
+
+    }
+    if ( lungime_lant[nod_destinatie] == INFINIT)
+        cout << "Nu exista lant";
+    else {
+        int lungime = lungime_lant[nod_destinatie];
+        stack<int> S;
+        /// Refacem drumul din nodul sursa in nodul destinatie
+        S.push(nod_destinatie);
+        while (lungime != 0) {
+            S.push(parinte[S.top()]);
+            lungime--;
+        }
+
+        ///Afisam drumul
+        cout << "Drumul cel mai scurt de la nodul " << nod_sursa << " la nodul " << nod_destinatie << " este: ";
+        while (!S.empty()) {
+            int nod = S.top();
+            S.pop();
+            cout << nod << ' ';
+        }
+
+        cout << '\n';
+    }
+}

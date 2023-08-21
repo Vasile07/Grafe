@@ -1,0 +1,75 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+using std::vector;
+using std::ifstream;
+using std::ofstream;
+using std::pair;
+
+
+typedef int TNod;
+
+vector<pair<TNod,TNod>>E;
+
+TNod minimum_not_exist(vector<TNod> K) {
+    TNod nod = 0;
+    while(true){
+        bool gasit = false;
+        for ( auto elem : K )
+            if ( elem == nod ){
+                gasit = true;
+                break;
+            }
+
+        if( !gasit )
+            return nod;
+
+        nod++;
+    }
+}
+
+void DecodarePrufer(vector<TNod> K, int len, int tati[]) {
+    for ( int i = 1 ; i <= len ; i ++ ){
+        TNod x = K.front();
+        TNod y = minimum_not_exist(K);
+        E.push_back({x,y});
+        tati[y] = x;
+        K.erase(K.cbegin());
+        K.push_back(y);
+    }
+    TNod y = minimum_not_exist(K);
+    tati[y] = -1;
+}
+
+int main(int argc, char* argv[]) {
+
+    if ( argc != 3){
+        std::cout << "Numar argumente invalid!\n";
+        return -1;
+    }
+
+    vector<TNod> K;
+    int len;
+
+    ifstream fin(argv[1]);
+    fin >> len;
+    for ( int i = 0 ; i < len ; i ++ ){
+        TNod nod;
+        fin >> nod;
+        K.push_back(nod);
+    }
+    fin.close();
+
+    int n = len + 1;
+    int tati[10000];
+    DecodarePrufer(K, len, tati);
+
+    ofstream fout(argv[2]);
+    fout << n << '\n';
+    for ( int i = 0 ; i < n ; i ++ )
+        fout << tati[i] << ' ';
+    fout << '\n';
+    fout.close();
+    return 0;
+}
